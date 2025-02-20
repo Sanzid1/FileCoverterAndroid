@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.filecoverter"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.filecoverter"
@@ -38,7 +38,7 @@ dependencies {
     // Core dependencies
     implementation(libs.appcompat)
     implementation(libs.material)
-    implementation(libs.recyclerview)
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation(libs.constraintlayout)
     implementation(libs.lifecycle.livedata.ktx)
     implementation(libs.lifecycle.viewmodel.ktx)
@@ -46,13 +46,12 @@ dependencies {
     implementation(libs.navigation.ui)
 
     // PDF conversion
-    implementation("com.itextpdf:itext7-core:7.2.5")
+    implementation(libs.itext.kernel)
+    implementation(libs.itext.io)
+    implementation(libs.itext.layout)
 
     // Google AdMob
-    implementation("com.google.android.gms:play-services-ads:22.6.0")
-
-    // File picker
-    implementation("com.github.dhaval2404:android-file-picker:2.2")
+    implementation(libs.admob)
 
     // Testing
     testImplementation(libs.junit)

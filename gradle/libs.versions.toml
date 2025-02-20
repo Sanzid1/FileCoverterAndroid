@@ -11,6 +11,8 @@ lifecycleLivedataKtx = "2.8.7"
 lifecycleViewmodelKtx = "2.8.7"
 navigationFragment = "2.8.7"
 navigationUi = "2.8.7"
+admob = "23.6.0"
+itext = "7.2.5"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -24,6 +26,10 @@ lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-lived
 lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
+admob = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "admob" }
+itext-kernel = { group = "com.itextpdf", name = "kernel", version.ref = "itext" }
+itext-io = { group = "com.itextpdf", name = "io", version.ref = "itext" }
+itext-layout = { group = "com.itextpdf", name = "layout", version.ref = "itext" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

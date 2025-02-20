@@ -12,16 +12,15 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.dhaval2404.imagepicker.ImagePicker;
 import com.example.filecoverter.R;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.contract.ActivityResultContracts;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
@@ -32,12 +31,12 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class FileConverterFragment extends Fragment {
-    private static final int PERMISSION_REQUEST_CODE = 200;
     private Button selectFileButton;
     private Button convertButton;
     private ProgressBar progressBar;
@@ -49,21 +48,21 @@ public class FileConverterFragment extends Fragment {
             registerForActivityResult(new ActivityResultContracts.RequestPermission(),
                     isGranted -> {
                         if (isGranted) {
-                            Toast.makeText(getContext(), "Permission granted", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), R.string.permission_granted, Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Permission denied", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), R.string.permission_denied, Toast.LENGTH_SHORT).show();
                         }
                     });
 
-    private final ActivityResultCallback<Uri> imagePickerCallback = result -> {
-        if (result != null) {
-            selectedFileUri = result;
-            convertButton.setEnabled(true);
-            statusText.setText("File selected: " + result.getLastPathSegment());
-        } else {
-            Toast.makeText(getContext(), "No file selected", Toast.LENGTH_SHORT).show();
-        }
-    };
+    private final ActivityResultLauncher<String> pickImage =
+            registerForActivityResult(new ActivityResultContracts.GetContent(),
+                    uri -> {
+                        if (uri != null) {
+                            selectedFileUri = uri;
+                            statusText.setText(getString(R.string.file_selected, uri.getLastPathSegment()));
+                            convertButton.setEnabled(true);
+                        }
+                    });
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -99,21 +98,17 @@ public class FileConverterFragment extends Fragment {
     }
 
     private void selectFile() {
-        ImagePicker.with(this)
-                .galleryOnly()
-                .compress(1024)
-                .maxResultSize(1080, 1080)
-                .start();
+        pickImage.launch("image/*");
     }
 
     private void convertToPdf() {
         if (selectedFileUri == null) {
-            Toast.makeText(getContext(), "Please select a file first", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.please_select_file, Toast.LENGTH_SHORT).show();
             return;
         }
 
         progressBar.setVisibility(View.VISIBLE);
-        statusText.setText("Converting...");
+        statusText.setText(R.string.converting);
 
         new Thread(() -> {
             try {
@@ -125,22 +120,23 @@ public class FileConverterFragment extends Fragment {
 
                 // Get input stream from Uri
                 InputStream inputStream = requireContext().getContentResolver().openInputStream(selectedFileUri);
-                if (inputStream == null) throw new IOException("Could not open input file");
+                if (inputStream == null) throw new IOException(getString(R.string.error_open_file));
 
-                // Create image and add to PDF
-                ImageData imageData = ImageDataFactory.create(inputStream.readAllBytes());
+                // Create image and add to PDF using backward-compatible approach
+                byte[] imageBytes = readAllBytesCompat(inputStream);
+                ImageData imageData = ImageDataFactory.create(imageBytes);
                 Image image = new Image(imageData);
                 document.add(image);
                 document.close();
 
                 requireActivity().runOnUiThread(() -> {
-                    statusText.setText("Conversion completed! File saved at: " + outputPath);
+                    statusText.setText(getString(R.string.conversion_complete, outputPath));
                     progressBar.setVisibility(View.GONE);
                 });
 
             } catch (Exception e) {
                 requireActivity().runOnUiThread(() -> {
-                    statusText.setText("Error converting file: " + e.getMessage());
+                    statusText.setText(getString(R.string.error_converting, e.getMessage()));
                     progressBar.setVisibility(View.GONE);
                 });
             }
@@ -161,5 +157,13 @@ public class FileConverterFragment extends Fragment {
         }
     }
 
-
+    private byte[] readAllBytesCompat(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[16384];
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        return buffer.toByteArray();
+    }
 }
